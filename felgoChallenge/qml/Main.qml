@@ -19,6 +19,5 @@ App {
                 anchors.centerIn: parent
             }
         }
-
     }
 }
