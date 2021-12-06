@@ -1,4 +1,5 @@
 import QtQuick 2.0
+import Felgo 3.0
 
 Item {
     id: _field
@@ -72,17 +73,20 @@ Item {
             text: "Log: "
         }
 
-        Rectangle {
+        AppImage {
             anchors {
                 top: parent.top
-                topMargin: 5
+                topMargin: -20
                 horizontalCenter: parent.horizontalCenter
             }
-            color: "transparent"
-            border.color: _ballColor
-            border.width: 6
-            height: parent.height / 4.2
-            width: parent.width / 1.25
+            source: "../assets/footballGoal.png"
+            scale: 0.68
+
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                opacity: 0.2
+            }
 
             Rectangle {
                 anchors {
