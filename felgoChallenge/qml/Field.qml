@@ -4,27 +4,12 @@ import Felgo 3.0
 Item {
     id: _field
 
-    property string _backgroundColor: "#417B5A"
-    property string _selectorColor: "#59855C"
-    property string _buttonBackgroundColor: "#BE6E46"
-    property string _buttonBackgroundColorPressed: "#84A190"
-    property string _buttonBorderColor: "#FF9F1C"
-    property string _buttonBorderColorPressed: "#FFF"
-    property string _ballColor: "#FFFCF9"
-    property string _fieldColor: "#39AD41"
-
-    property int rotationSelected
-    property int factorChange: 2
-    property bool showDirectionBar
-    property int ballMaxScale: 10
-    property int ballMinScale: 20
-    property int ballScalingFactor: ballMaxScale
-
     Timer {
         id: changeRotationTimer
         repeat: true
-        interval: 20
+        interval: DataModel.intervalTimer
         onTriggered: {
+            moveKeeper()
             changeRot()
         }
     }
@@ -34,10 +19,10 @@ Item {
         repeat: false
         interval: 1500
         onTriggered: {
-            ballScalingFactor = ballMinScale
-            showDirectionBar = false
+            DataModel.shotTaken = true
+            DataModel.ballScalingFactor = DataModel.ballMinScale
             _field.state = "shotTakenState"
-            touchLog.text = " SSSSHOOOOOTTT"
+            touchLog.text = getResult()
             resultTimer.restart()
         }
     }
@@ -47,56 +32,94 @@ Item {
         repeat: false
         interval: 1500
         onTriggered: {
-            showDirectionBar = false
-            _field.state = "bottom"
-            touchLog.text = "ready to shoot"
-            ballScalingFactor = ballMaxScale
+            if (DataModel.isGameOver()) {
+                touchLog.text = "Game Over."
+            } else {
+                DataModel.shotTaken = false
+                _field.state = "bottom"
+                touchLog.text = "Ready to shoot."
+                DataModel.ballScalingFactor = DataModel.ballMaxScale
+            }
         }
     }
 
     Rectangle {
-        anchors {
-            centerIn: parent
-        }
-
-        color: _fieldColor
+        id: playarea
+        anchors.centerIn: parent
+        color: DataModel.fieldColor
         height: parent.height / 1.05
         width: parent.width / 1.1
         radius: 5
         clip: true
+
+        AppButton {
+            anchors {
+                bottom: parent.bottom
+                bottomMargin: 100
+                horizontalCenter: parent.horizontalCenter
+            }
+            height: 50
+            width: 100
+            text: "Restart game."
+            radius: 5
+            backgroundColor: DataModel.buttonBackgroundColor
+            backgroundColorPressed: DataModel.buttonBackgroundColorPressed
+            borderColor: DataModel.buttonBorderColor
+            borderColorPressed: DataModel.buttonBorderColorPressed
+            borderWidth: 5
+            textSize: 27
+            visible: DataModel.gameOver
+            onClicked: {
+                DataModel.resetGame()
+                _field.state = "bottom"
+                touchLog.text = "Ready to shoot."
+            }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            anchors.verticalCenterOffset: 100
+            font.pixelSize: 32
+            color: "white"
+            text: "Current Score: " + DataModel.currentScore
+        }
 
         Text {
             id: touchLog
             anchors.centerIn: parent
             font.pixelSize: 32
             color: "white"
-            text: "Log: "
+            text: DataModel.isGameOver() ? "Game Over!" : "Hold football to start aiming."
+            horizontalAlignment: Text.AlignHCenter
         }
 
-        AppImage {
+        Goal {
+            id: goal
+            scale: 0.6
             anchors {
                 top: parent.top
                 topMargin: -20
                 horizontalCenter: parent.horizontalCenter
             }
-            source: "../assets/footballGoal.png"
-            scale: 0.68
+        }
 
-            Rectangle {
-                anchors.fill: parent
-                color: "transparent"
-                opacity: 0.2
-            }
+        AppImage {
+            id: goalie
+            x: 40 + ((goal.width/2) * goal.scale) - (width / 2) + DataModel.goaliePosition
+            y: 40
+            width: 112
+            height: 120
+            source: DataModel.shotTaken ? "../assets/goalKeeperAction.png" :
+                                "../assets/goalKeeperWaiting.png"
+        }
 
-            Rectangle {
-                anchors {
-                    bottom: parent.bottom
-                    horizontalCenter: parent.horizontalCenter
-                }
-                color: _ballColor
-                height: 10
-                width: parent.width * 2
-            }
+        Rectangle {
+            id: ballFinalPosition
+            x: (playarea.width / 2) - (ball.width / 4) + getBallPosition()
+            y: 75
+            color: "transparent"
+            height: 50
+            width: 30
         }
 
         Rectangle {
@@ -107,11 +130,34 @@ Item {
                 horizontalCenter: parent.horizontalCenter
             }
             color: "transparent"
-            height: parent.height - (70 * 1)//ball.height * 2
-            width: 10//height / 10
+            height: 630
+            width: 10
             transformOrigin: Item.Bottom
-            rotation: rotationSelected
+            rotation: DataModel.rotationSelected
             radius: 5
+
+            Ball {
+                id: ball
+                width: 60
+                height: 60
+                x: parent.width - 30
+                y: DataModel.shotTaken ? -30 : parent.height -30
+                scale: DataModel.shotTaken ? 0.4 : 1.0
+
+                MouseArea {
+                    enabled: !DataModel.shotTaken
+                    anchors.fill: parent
+                    onPressed: {
+                        DataModel.showDirectionBar = true
+                        changeRotationTimer.restart()
+                    }
+                    onReleased: {
+                        changeRotationTimer.stop()
+                        shotSetUpTimer.restart()
+                        DataModel.showDirectionBar = false
+                    }
+                }
+            }
 
             Rectangle {
                 id: directionBarSelectedTop
@@ -140,42 +186,20 @@ Item {
             }
 
             Rectangle {
-                id: ball
-                color: "white"
-                height: parent.height / ballScalingFactor
-                width: height
-                radius: height / 2
-                anchors.horizontalCenter: directionBarSelectedBottom.horizontalCenter
-                anchors.verticalCenter: directionBarSelectedBottom.verticalCenter
-
-                MouseArea {
-                    anchors.fill: parent
-                    onPressed: {
-                        showDirectionBar = true
-                        changeRotationTimer.restart()
-                    }
-                    onReleased: {
-                        changeRotationTimer.stop()
-                        shotSetUpTimer.restart()
-                    }
-                }
-            }
-
-            Rectangle {
-                opacity: showDirectionBar
                 anchors {
                     bottom: ball.verticalCenter
                     horizontalCenter: parent.horizontalCenter
                 }
-                color: _buttonBorderColor
                 height: ball.height * 2
                 width: 10
+                opacity: DataModel.showDirectionBar
+                color: DataModel.buttonBorderColor
                 transformOrigin: Item.Bottom
-                rotation: rotationSelected
+                rotation: DataModel.rotationSelected
                 radius: 5
-                Behavior on rotation { NumberAnimation { duration: 200 }}
-                Behavior on opacity { NumberAnimation { duration: 300 }}
-                Behavior on scale { NumberAnimation { duration: 300 }}
+
+                Behavior on opacity { NumberAnimation { duration: 500 }}
+                Behavior on scale { NumberAnimation { duration: 200 }}
             }
         }
     }
@@ -204,13 +228,46 @@ Item {
     }
 
     function changeRot() {
-        if (rotationSelected > 30) {
-            factorChange = -2
-        } else if (rotationSelected < -30) {
-            factorChange = 2
+        if (DataModel.rotationSelected >= 20) {
+            DataModel.selectorFactorChange = -DataModel.selectorFactorChange
+        } else if (DataModel.rotationSelected <= -20) {
+            DataModel.selectorFactorChange = Math.abs(DataModel.selectorFactorChange)
         }
 
-        rotationSelected += factorChange
+        DataModel.rotationSelected += DataModel.selectorFactorChange
     }
 
+    function moveKeeper() {
+        if (goalie.x < 45) {
+            DataModel.goalieFactorChange = Math.abs(DataModel.goalieFactorChange)
+        } else if (goalie.x >= (45 + ((goal.width * goal.scale) - goalie.width))) {
+            DataModel.goalieFactorChange = -DataModel.goalieFactorChange
+        }
+
+        DataModel.goaliePosition += DataModel.goalieFactorChange
+    }
+
+    function getResult() {
+        let insideGoalAngle = (Math.asin((goal.width / 2) / directionBarSelected.height) / 2)
+        insideGoalAngle = (insideGoalAngle * 180) / Math.PI
+
+        let ballPosition = getBallPosition()
+
+        if (DataModel.rotationSelected > -insideGoalAngle && DataModel.rotationSelected < insideGoalAngle) {
+            if (!(((ballFinalPosition.x + ballFinalPosition.width) > (goalie.x + goalie.width / 2 - 20)) &&
+                    (ballFinalPosition.x < (goalie.x + goalie.width / 2 + 10)))) {
+                DataModel.goalScored()
+                return "GOOOAAAALLL!!!!\nScore x" + DataModel.scoreMultiplier
+            }
+        }
+
+        DataModel.missedShot()
+        return "BOOOOOOO!!!"
+    }
+
+    function getBallPosition() {
+        let shotAngle = (DataModel.rotationSelected * Math.PI) / 180
+        let ballPosition = Math.sin(shotAngle) * directionBarSelected.height
+        return ballPosition
+    }
 }
