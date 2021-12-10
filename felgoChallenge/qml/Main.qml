@@ -3,32 +3,35 @@ import QtQuick 2.0
 import VPlayApps 1.0
 
 App {
-    // You get free licenseKeys from https://felgo.com/licenseKey
-    // With a licenseKey you can:
-    //  * Publish your games & apps for the app stores
-    //  * Remove the Felgo Splash Screen or set a custom one (available with the Pro Licenses)
-    //  * Add plugins to monetize, analyze & improve your apps (available with the Pro Licenses)
-    //licenseKey: "<generate one from https://felgo.com/licenseKey>"
-
-    property string _backgroundColor: "#417B5A"
-    property string _selectorColor: "#59855C"
-    property string _buttonBackgroundColor: "#BE6E46"
-    property string _buttonBackgroundColorPressed: "#84A190"
-    property string _buttonBorderColor: "#FF9F1C"
-    property string _buttonBorderColorPressed: "#FFF"
+    onInitTheme: {
+        Theme.navigationBar.backgroundColor = DataModel.backgroundColor
+        Theme.colors.backgroundColor = DataModel.backgroundColor
+        Theme.colors.dividerColor = DataModel.backgroundColor
+    }
 
     NavigationStack {
-        navigationBar.backgroundColor: _backgroundColor
-
         Page {
             id: landingPage
-            backgroundColor: _backgroundColor
+            title: "SoccerMania"
+
+            Text {
+                anchors{
+                    top: parent.top
+                    topMargin: 50
+                    horizontalCenter: parent.horizontalCenter
+                }
+                text: "Max. Score: " + DataModel.maxScore
+                font.family: "Arial"
+                font.pointSize: 31
+                color: "#ffffff"
+
+            }
 
             Rectangle {
                 anchors {
                     centerIn: parent
                 }
-                color: _selectorColor
+                color: DataModel.selectorColor
                 height: parent.height / 1.7
                 width: parent.width / 1.5
                 radius: 5
@@ -44,48 +47,54 @@ App {
                         anchors.horizontalCenter: parent.horizontalCenter
                         height: parent.height / 4
                         width: parent.width - 10
-                        text: "Best of 3 Mode"
+                        text: "Easy Mode"
                         radius: 5
-                        backgroundColor: _buttonBackgroundColor
-                        backgroundColorPressed: _buttonBackgroundColorPressed
-                        borderColor: _buttonBorderColor
-                        borderColorPressed: _buttonBorderColorPressed
+                        backgroundColor: DataModel.buttonBackgroundColor
+                        backgroundColorPressed: DataModel.buttonBackgroundColorPressed
+                        borderColor: DataModel.buttonBorderColor
+                        borderColorPressed: DataModel.buttonBorderColorPressed
                         borderWidth: 5
                         textSize: 27
                         onClicked: {
-                            landingPage.navigationStack.push(Qt.resolvedUrl("Best3Mode.qml"))
+                            DataModel.difficultyLevel = DataModel.DifficultyLevels.Easy
+                            DataModel.resetGame()
+                            landingPage.navigationStack.push(Qt.resolvedUrl("PlayArea.qml"))
                         }
                     }
 
                     AppButton {
                         height: parent.height / 4
                         width: parent.width
-                        text: "Best of 5 Mode"
+                        text: "Medium Mode"
                         radius: 5
-                        backgroundColor: _buttonBackgroundColor
-                        backgroundColorPressed: _buttonBackgroundColorPressed
-                        borderColor: _buttonBorderColor
-                        borderColorPressed: _buttonBorderColorPressed
+                        backgroundColor: DataModel.buttonBackgroundColor
+                        backgroundColorPressed: DataModel.buttonBackgroundColorPressed
+                        borderColor: DataModel.buttonBorderColor
+                        borderColorPressed: DataModel.buttonBorderColorPressed
                         borderWidth: 5
                         textSize: 27
                         onClicked: {
-                            landingPage.navigationStack.push(Qt.resolvedUrl("Best3Mode.qml"))
+                            DataModel.difficultyLevel = DataModel.DifficultyLevels.Medium
+                            DataModel.resetGame()
+                            landingPage.navigationStack.push(Qt.resolvedUrl("PlayArea.qml"))
                         }
                     }
 
                     AppButton {
                         height: parent.height / 4
                         width: parent.width
-                        text: "High Score Mode"
+                        text: "Hard Mode"
                         radius: 5
-                        backgroundColor: _buttonBackgroundColor
-                        backgroundColorPressed: _buttonBackgroundColorPressed
-                        borderColor: _buttonBorderColor
-                        borderColorPressed: _buttonBorderColorPressed
+                        backgroundColor: DataModel.buttonBackgroundColor
+                        backgroundColorPressed: DataModel.buttonBackgroundColorPressed
+                        borderColor: DataModel.buttonBorderColor
+                        borderColorPressed: DataModel.buttonBorderColorPressed
                         borderWidth: 5
                         textSize: 27
                         onClicked: {
-                            landingPage.navigationStack.push(Qt.resolvedUrl("Best3Mode.qml"))
+                            DataModel.difficultyLevel = DataModel.DifficultyLevels.Hard
+                            DataModel.resetGame()
+                            landingPage.navigationStack.push(Qt.resolvedUrl("PlayArea.qml"))
                         }
                     }
                 }
