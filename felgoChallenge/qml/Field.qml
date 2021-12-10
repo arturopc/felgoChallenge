@@ -77,14 +77,6 @@ Item {
         }
 
         Text {
-            anchors.centerIn: parent
-            anchors.verticalCenterOffset: 100
-            font.pixelSize: 32
-            color: "white"
-            text: "Current Score: " + DataModel.currentScore
-        }
-
-        Text {
             id: touchLog
             anchors.centerIn: parent
             font.pixelSize: 32
